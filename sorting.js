@@ -19,7 +19,7 @@ module.exports = class Sorting {
     }
 
     quickSort(list) {
-
+        _quickSort(list, 0, list.length - 1, this.settings.compareFunction);
     }
 
     shellSort(list) {
@@ -30,18 +30,97 @@ module.exports = class Sorting {
 
     }
 
-    bubbleSort() {
+    insertionSort(list) {
+        _insertionSort(list, 0, list.length - 1, this.settings.compareFunction)
+    }
 
+    timSort(list) {
+
+        for (let i = 0; i < list.length; i += 32) {
+            const element = list[i];
+            _insertionSort(list, i, Math.min(i + 32, list.length - 1), this.settings.compareFunction)
+        }
+
+        for (let i = 32; i < list.length; i = i * 2) {
+            for (let left = 0; left < list.length; left += i * 2) {
+                const mid = left + i - 1;
+                const right = Math.min(left + 2 * i - 1, list.length - 1);
+
+                _merge(list, left, mid, right, this.settings.compareFunction);
+            }
+        }
+    }
+
+    bubbleSort(list) {
+        for (let i = 0; i <= list.length; i++) {
+            for (let j = i; j <= list.length; j++) {
+                if (this.settings.compareFunction(list[i], list[j]) == 1) {
+                    const aux = list[i];
+                    list[i] = list[j];
+                    list[j] = aux;
+                }
+            }
+        }
     }
 
 
+}
+
+//Using right index as pivot
+function partition(list, left, right, compareFunction) {
+
+    let pivot = list[right];
+
+    let smallersIndex = left;
+
+    for (let j = left; j < right; j++) {
+        if (compareFunction(pivot, list[j]) == 1) {
+            let aux = list[j];
+            list[j] = list[smallersIndex];
+            list[smallersIndex] = aux;
+            smallersIndex++;
+        }
+    }
+
+    let aux = list[right];
+    list[right] = list[smallersIndex];
+    list[smallersIndex] = aux;
+
+    return smallersIndex;
+
+}
+
+
+function _quickSort(list, left, right, compareFunction) {
+    if (right <= left) return;
+
+    let pivotIndex = partition(list, left, right, compareFunction);
+
+    _quickSort(list, left, pivotIndex - 1, compareFunction);
+    _quickSort(list, pivotIndex + 1, right, compareFunction);
+}
+
+function _insertionSort(list, left, right, compareFunction) {
+    for (let i = left; i < right; i++) {
+        let min = list[i];
+        let minIndex = i;
+        for (let j = i + 1; j < right; j++) {
+            if (compareFunction(min, list[j]) == 1) {
+                min = list[j];
+                minIndex = j;
+            }
+        }
+        let aux = list[i];
+        list[i] = min;
+        list[minIndex] = aux;
+    }
 }
 
 function _mergeSort(list, leftIndex, rightIndex, compareFunction) {
     if (leftIndex >= rightIndex) return;
 
     let mediumIndex = parseInt((leftIndex + rightIndex) / 2);
-    console.log(leftIndex, mediumIndex, rightIndex);
+    // console.log(leftIndex, mediumIndex, rightIndex);
 
     _mergeSort(list, leftIndex, mediumIndex, compareFunction);
     _mergeSort(list, mediumIndex + 1, rightIndex, compareFunction);
@@ -50,9 +129,8 @@ function _mergeSort(list, leftIndex, rightIndex, compareFunction) {
 }
 
 function _merge(list, leftIndex, mediumIndex, rightIndex, compareFunction) {
-    // console.log("LISTA",list);
-    let L = [];// JSON.parse(JSON.stringify( list.slice(leftIndex,mediumIndex + 1)));    
-    let R = []; // JSON.parse(JSON.stringify( list.slice(mediumIndex + 1,rightIndex + 1)));   
+    let L = [];
+    let R = [];
     let LLength = mediumIndex - leftIndex + 1;
     let RLength = rightIndex - mediumIndex;
     for (let x = 0; x < LLength; x++)
@@ -60,17 +138,18 @@ function _merge(list, leftIndex, mediumIndex, rightIndex, compareFunction) {
     for (let x = 0; x < RLength; x++)
         R.push(list[mediumIndex + 1 + x]);
 
-    console.log(L,R);
 
-    let i = j = k = 0; // left, right, merged
+    let i = j = 0;
+    let k = leftIndex;
     while (i < L.length && j < R.length) {
         if (compareFunction(L[i], R[j]) == 1) {
-            list[k] = L[i];
-            i++; k++;
-        } else {
             list[k] = R[j];
-            j++; k;;
+            j++;
+        } else {
+            list[k] = L[i];
+            i++;
         }
+        k++;
     }
 
     while (i < L.length) {
@@ -79,9 +158,9 @@ function _merge(list, leftIndex, mediumIndex, rightIndex, compareFunction) {
     }
 
     while (j < R.length) {
-        list[k] = L[j];
+        list[k] = R[j];
         j++; k++;
     }
-    console.log("LISTA AFTER",list);
+    // console.log("LISTA AFTER",list);
 }
 
